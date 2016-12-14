@@ -2,11 +2,13 @@
 
 import bot
 
-message = ""
-tomiko  = bot.Bot("Tomiko")
+tomiko = bot.Bot("Tomiko")
 
-while message != "exit":
-    message  = input("")
+while True:
+    message = input("")
+    if message == "exit":
+        break
+
     response = tomiko.listen("Tester", message)
     if response != "":
         print(response)

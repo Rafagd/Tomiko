@@ -1,25 +1,36 @@
+import logging
 import re
 
 from bank import PhraseBank 
+
+logger = logging.getLogger("Bot")
 
 class Bot:
     def __init__(self, name):
         self.bank   = PhraseBank()
         self.name   = name
-        self.regexp = re.compile(".*" + name + ".*", re.IGNORECASE)
+        self.maintenance()
+
+
+    def maintenance(self):
+        logger.info("Starting maintenance")
+        self.bank.word_indexing()
+        self.bank.word_scaling()
+        logger.info("Maintenance ended")
+
 
     def listen(self, person, message):
-        self.bank.add(re.sub(r"(?is)" + self.name, "{nome}",
-            message
-                .replace("{", "{{")
-                .replace("}", "}}")
-        ))
+        message = re.sub(r"(?is)" + self.name, "{nome}",
+            message.replace("{", "{{").replace("}", "}}")
+        )
+        self.bank.add(message)
 
-        if self.regexp.match(message):
-            return self.reply(person)
+        if message.find("{nome}") >= 0:
+            return self.reply(person, message)
 
         return ""
 
-    def reply(self, person):
-        return self.bank.read_random().format(nome=person)
+
+    def reply(self, person, message):
+        return self.bank.read_weighted(message).format(nome=person)
 
