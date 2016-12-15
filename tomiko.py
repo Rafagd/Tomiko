@@ -16,7 +16,7 @@ def get_token():
 
 def message(bot, update):
     global tomiko
-    reply = tomiko.listen(update.message.text)
+    reply = tomiko.listen(update.message.from_user.first_name, update.message.text)
     if reply != "":
         update.message.reply_text(reply)
 
