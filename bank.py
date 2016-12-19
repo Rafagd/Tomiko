@@ -3,7 +3,6 @@ import os
 import random
 import re
 
-SEPARATORS = "[ ,.!?\"':\\[\\]\n\r\t]+"
 
 class PhraseBank:
     def __init__(self, phrase_file="phrases.log"):
@@ -11,22 +10,29 @@ class PhraseBank:
         self.file.seek(0, os.SEEK_END)
         self.size   = self.file.tell()
 
-        self._index = dict()
-        self.word_indexing()
-
-        self._scale = dict()
-        self.word_scaling()
-
 
     def __del__(self):
         if self.file:
             self.file.close()
 
 
-    def add(self, text):
+    def add(self, message):
         self.file.seek(0, os.SEEK_END)
-        self.file.write(str.encode(text) + b"\x0A")
+        self.file.write(str.encode(message.text) + b"\x0A")
         self.size = self.file.tell()
+
+
+    def read_message(self, pos):
+        while self.file.read(1) != b"\x0A":
+            pos -= 1
+
+            if pos < 0:
+                self.file.seek(0)
+                break
+
+            self.file.seek(pos)
+
+        return Message(bytes.decode(self.file.readline()))
 
 
     def word_scale(self, word):
@@ -62,11 +68,6 @@ class PhraseBank:
                 response = self.read_word(word)
                 break
 
-        for word in words:
-            if word != "":
-                self.update_index(word, self.file.tell() - 1)
-                self.update_scale(word)
-
         return response
 
 
@@ -84,18 +85,6 @@ class PhraseBank:
             result = self.read(self.size * random.random())
         return result
 
-
-    def read(self, pos):
-        while self.file.read(1) != b"\x0A":
-            pos -= 1
-
-            if pos < 0:
-                self.file.seek(0)
-                break
-
-            self.file.seek(pos)
-
-        return bytes.decode(self.file.readline())
 
 
     def word_indexing(self):
