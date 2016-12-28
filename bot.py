@@ -11,6 +11,7 @@ class Bot:
         self.regexp = re.compile("(?is)" + name)
         self.log    = log.Log("phrases.log")
         self.index  = log.Index(self.log)
+        self.mind   = Mind()
 
 
     def listen(self, person, message):
@@ -28,13 +29,24 @@ class Bot:
             response = self.reply(message).text.format(nome=person)
 
         self.index.update(message)
+        self.mind.update(message)
         return response
 
 
     def reply(self, message):
-        if random.random() < 0.05:
-            return self.reply_random()
-        return self.reply_message(message)
+        mindset  = self.mind.messages()
+        mindlen  = len(mindset)
+        selected = int((len(mindset) + 2) * random.random())
+
+        if selected < mindlen:
+            response = self.reply_message(mindset[selected])
+        elif selected == mindlen:
+            response = self.reply_message(message)
+        else:
+            response = self.reply_random()
+
+        self.mind.update(response)
+        return response
 
 
     def reply_random(self):
@@ -63,6 +75,29 @@ class Bot:
         
         # Unreachable?
         return self.reply_random()
-
             
 
+class Mind:
+    def __init__(self):
+        self._state = dict()
+
+
+    def update(self, message):
+        for word in self._state:
+            self._state[word]["ttl"] -= 1
+
+        for word in message.components:
+            self._state[word] = {
+                "message": log.Message(word, message.offset),
+                "ttl":     10,
+            }
+
+        new_state = dict()
+        for word in self._state:
+            if self._state[word]["ttl"] >= 0:
+                new_state[word] = self._state[word]
+        self._state = new_state
+
+
+    def messages(self):
+        return [ self._state[word]["message"] for word in self._state ]
