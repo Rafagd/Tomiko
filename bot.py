@@ -1,36 +1,114 @@
 import logging
 import re
-
-from bank import PhraseBank 
+import random
+import log
 
 logger = logging.getLogger("Bot")
 
 class Bot:
     def __init__(self, name):
-        self.bank   = PhraseBank()
         self.name   = name
-        self.maintenance()
-
-
-    def maintenance(self):
-        logger.info("Starting maintenance")
-        self.bank.word_indexing()
-        self.bank.word_scaling()
-        logger.info("Maintenance ended")
+        self.regexp = re.compile("(?is)" + name)
+        self.log    = log.Log("phrases.log")
+        self.index  = log.Index(self.log)
+        self.mind   = Mind()
 
 
     def listen(self, person, message):
-        message = re.sub(r"(?is)" + self.name, "{nome}",
-            message.replace("{", "{{").replace("}", "}}")
-        )
-        self.bank.add(message)
+        # Receives an escaped version of the message, and the number of times
+        # it replaced the name of the bot for {nome}
+        message = message.replace("{", "{{").replace("}", "}}")
+        m, subs = self.regexp.subn("{nome}", message)
+        message = log.Message(m, self.log.size + 1)
+        self.log.add(message)
 
-        if message.find("{nome}") >= 0:
-            return self.reply(person, message)
+        response = ""
+        if subs > 0:
+            response = self.reply(message).text.format(nome=person)
+        elif random.random() < 0.01:
+            response = self.reply(message).text.format(nome=person)
 
-        return ""
+        self.index.update(message)
+        self.mind.update(message)
+        return response
 
 
-    def reply(self, person, message):
-        return self.bank.read_weighted(message).format(nome=person)
+    def reply(self, message):
+        reply_type = random.random()
+        response   = ""
 
+        # 10% chance of random message.
+        if reply_type < 0.10:
+            response = self.reply_random()
+
+        # 50% of direct reply
+        # (the number is 60 because it includes the prev. 10%)
+        elif reply_type < 0.60:
+            response = self.reply_message(message)
+
+        # 40% chance of mindset reply
+        else:
+            mindset  = self.mind.messages()
+            selected = int(len(mindset) * random.random())
+            response = self.reply_message(mindset[selected])
+
+        self.mind.update(response)
+        return response
+
+
+    def reply_random(self):
+        return self.log.read_message(int(random.random() * self.log.size))
+
+
+    def reply_word(self, word):
+        offsets = self.index.offsets(word)
+        return self.log.read_message(offsets[int(random.random() * len(offsets))])
+
+
+    def reply_message(self, message):
+        scale_sum = 0
+        for word in message.components:
+            scale = self.index.scale(word)
+            if scale > 0:
+                scale_sum += 1.0 / scale
+            
+        selected = random.random() * scale_sum
+        for word in message.components:
+            scale = self.index.scale(word)
+            if scale > 0:
+                scale_sum -= 1.0 / scale
+            if selected > scale_sum:
+                return self.reply_word(word)
+        
+        # Unreachable?
+        return self.reply_random()
+            
+
+class Mind:
+    def __init__(self):
+        self._state = dict()
+
+
+    def update(self, message):
+        for word in self._state:
+            self._state[word]["ttl"] -= 1
+
+
+
+
+
+        for word in message.components:
+            self._state[word] = {
+                "message": log.Message(word, message.offset),
+                "ttl":     10,
+            }
+
+        new_state = dict()
+        for word in self._state:
+            if self._state[word]["ttl"] >= 0:
+                new_state[word] = self._state[word]
+        self._state = new_state
+
+
+    def messages(self):
+        return [ self._state[word]["message"] for word in self._state ]
