@@ -34,16 +34,23 @@ class Bot:
 
 
     def reply(self, message):
-        mindset  = self.mind.messages()
-        mindlen  = len(mindset)
-        selected = int((len(mindset) + 2) * random.random())
+        reply_type = random.random()
+        response   = ""
 
-        if selected < mindlen:
-            response = self.reply_message(mindset[selected])
-        elif selected == mindlen:
-            response = self.reply_message(message)
-        else:
+        # 10% chance of random message.
+        if reply_type < 0.10:
             response = self.reply_random()
+
+        # 50% of direct reply
+        # (the number is 60 because it includes the prev. 10%)
+        elif reply_type < 0.60:
+            response = self.reply_message(message)
+
+        # 40% chance of mindset reply
+        else:
+            mindset  = self.mind.messages()
+            selected = int(len(mindset) * random.random())
+            response = self.reply_message(mindset[selected])
 
         self.mind.update(response)
         return response
@@ -85,6 +92,10 @@ class Mind:
     def update(self, message):
         for word in self._state:
             self._state[word]["ttl"] -= 1
+
+
+
+
 
         for word in message.components:
             self._state[word] = {
