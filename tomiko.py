@@ -23,7 +23,7 @@ def message(bot, update):
 
 def explain(bot, update, args):
     global tomiko
-    tomiko.sendMessage(chat_id=update.message.chat_id, text=tomiko.why)
+    bot.sendMessage(chat_id=update.message.chat_id, text=tomiko.why)
 
 logging.basicConfig(level=logging.INFO)
 
