@@ -60,6 +60,7 @@ class Bot:
             response = self.reply_message(mindset[selected])
             self.why = "Pensei que tinha relação com \"" + mindset[selected].text + "\"."
 
+        self.why = self.why.replace(nome=self.name)
         self.mind.update(response)
         return response
 

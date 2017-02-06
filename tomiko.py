@@ -23,7 +23,14 @@ def message(bot, update):
 
 def explain(bot, update, args):
     global tomiko
-    bot.sendMessage(chat_id=update.message.chat_id, text=tomiko.why)
+    if random.random() < 0.1:
+        bot.sendMessage(
+            chat_id=update.message.chat_id,
+            text="Não devo explicações a ninguém."
+        )
+    else:
+        bot.sendMessage(chat_id=update.message.chat_id, text=tomiko.why)
+
 
 logging.basicConfig(level=logging.INFO)
 
