@@ -21,6 +21,10 @@ def message(bot, update):
         update.message.reply_text(reply)
 
 
+def explain(bot, update, args):
+    global tomiko
+    tomiko.sendMessage(chat_id=update.message.chat_id, text=tomiko.why)
+
 logging.basicConfig(level=logging.INFO)
 
 token  = get_token()
@@ -29,5 +33,6 @@ tomiko = Bot("Tomiko")
 updater    = Updater(token=token)
 dispatcher = updater.dispatcher
 dispatcher.add_handler(MessageHandler(Filters.text, message))
+dispatcher.add_handler(CommandHandler('explain', explain, pass_args=True))
 updater.start_polling()
 

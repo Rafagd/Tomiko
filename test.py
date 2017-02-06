@@ -12,4 +12,5 @@ while True:
     response = tomiko.listen("Tester", message)
     if response != "":
         print(response)
+        print(tomiko.why)
 

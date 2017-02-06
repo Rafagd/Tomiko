@@ -12,6 +12,7 @@ class Bot:
         self.log    = log.Log("phrases.log")
         self.index  = log.Index(self.log)
         self.mind   = Mind()
+        self.why    = ""
 
 
     def listen(self, person, message):
@@ -37,20 +38,27 @@ class Bot:
         reply_type = random.random()
         response   = ""
 
+        # Mente vazia faz o número nunca ser maior que 60%.
+        if self.mind.empty:
+            reply_type *= 0.6
+
         # 10% chance of random message.
         if reply_type < 0.10:
             response = self.reply_random()
+            self.why = "Sei lá, respondi aquilo só pelo caos."
 
         # 50% of direct reply
         # (the number is 60 because it includes the prev. 10%)
         elif reply_type < 0.60:
             response = self.reply_message(message)
+            self.why = "Estava respondendo esta mensagem: \"" + message.text + "\"."
 
         # 40% chance of mindset reply
         else:
             mindset  = self.mind.messages()
             selected = int(len(mindset) * random.random())
             response = self.reply_message(mindset[selected])
+            self.why = "Pensei que tinha relação com \"" + mindset[selected].text + "\"."
 
         self.mind.update(response)
         return response
@@ -86,16 +94,13 @@ class Bot:
 
 class Mind:
     def __init__(self):
+        self.empty  = True
         self._state = dict()
 
 
     def update(self, message):
         for word in self._state:
             self._state[word]["ttl"] -= 1
-
-
-
-
 
         for word in message.components:
             self._state[word] = {
@@ -108,6 +113,7 @@ class Mind:
             if self._state[word]["ttl"] >= 0:
                 new_state[word] = self._state[word]
         self._state = new_state
+        self.empty  = False
 
 
     def messages(self):
