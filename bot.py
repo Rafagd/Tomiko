@@ -1,7 +1,8 @@
 import logging
-import re
-import random
 import log
+import operator
+import random
+import re
 
 logger = logging.getLogger("Bot")
 
@@ -123,7 +124,7 @@ class Mind:
 
     def __str__(self):
         content = "TTL\tWord\n"
-        ordered = sorted(self._state, key=attrgetter('ttl'), reverse=True)
+        ordered = sorted(self._state.values(), key=lambda item: item['ttl'], reverse=True)
         for word in ordered:
-            content += "{}\t{}\n".format(ordered[word]["ttl"], word)
+            content += "{}\t{}\n".format(word["ttl"], word["message"])
         return content

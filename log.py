@@ -12,6 +12,12 @@ class Message:
             if word != '':
                 self.components.append(word)
 
+    def __str__(self):
+        return self.text
+
+    def __repr__(self):
+        return self.text
+
 
 class Log:
     def __init__(self, file_path):
