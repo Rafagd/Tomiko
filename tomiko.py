@@ -52,5 +52,6 @@ updater    = Updater(token=token)
 dispatcher = updater.dispatcher
 dispatcher.add_handler(MessageHandler(Filters.text, message))
 dispatcher.add_handler(CommandHandler('explain', explain, pass_args=True))
+dispatcher.add_handler(CommandHandler('mind', mind, pass_args=True))
 updater.start_polling()
 
