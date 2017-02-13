@@ -119,3 +119,10 @@ class Mind:
 
     def messages(self):
         return [ self._state[word]["message"] for word in self._state ]
+
+
+    def __str__(self):
+        content = "Word: TTL"
+        for word in self._state:
+            content += "{}: {}".format(word, self._state[word]["ttl"])
+        return content

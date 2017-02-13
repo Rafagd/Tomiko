@@ -32,6 +32,17 @@ def explain(bot, update, args):
         bot.sendMessage(chat_id=update.message.chat_id, text=tomiko.why)
 
 
+def mind(bot, update, args):
+    global tomiko
+    if random.random() < 0.1:
+        bot.sendMessage(
+            chat_id=update.message.chat_id,
+            text="Sai da minha cabeça."
+        )
+    else:
+        content = "Tomiko's mind:\n{}".format(bot.mind)
+        bot.sendMessage(chat_id=update.message.chat_id, text=content)
+
 logging.basicConfig(level=logging.INFO)
 
 token  = get_token()
