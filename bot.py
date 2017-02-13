@@ -122,8 +122,8 @@ class Mind:
 
 
     def __str__(self):
-        content = "Word: TTL\n"
-        ordered = sorted(self._state, key='ttl', reverse=True)
+        content = "TTL\tWord"
+        ordered = sorted(self._state, key=attrgetter('ttl'), reverse=True)
         for word in ordered:
-            content += "{}: {}\n".format(word, ordered[word]["ttl"])
+            content += "{}\t{}\n".format(ordered[word]["ttl"], word)
         return content
