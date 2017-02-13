@@ -124,5 +124,5 @@ class Mind:
     def __str__(self):
         content = "Word: TTL"
         for word in self._state:
-            content += "{}: {}".format(word, self._state[word]["ttl"])
+            content += "{}: {}\n".format(word, self._state[word]["ttl"])
         return content

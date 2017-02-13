@@ -40,7 +40,7 @@ def mind(bot, update, args):
             text="Sai da minha cabeça."
         )
     else:
-        content = "Tomiko's mind:\n{}".format(bot.mind)
+        content = "Tomiko's mind:\n{}".format(tomiko.mind)
         bot.sendMessage(chat_id=update.message.chat_id, text=content)
 
 logging.basicConfig(level=logging.INFO)
