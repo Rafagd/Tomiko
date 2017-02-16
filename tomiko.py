@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import commands
 import logging
 
 from bot import Bot
@@ -21,37 +22,20 @@ def message(bot, update):
         update.message.reply_text(reply)
 
 
-def explain(bot, update, args):
-    global tomiko
-    if random.random() < 0.1:
-        bot.sendMessage(
-            chat_id=update.message.chat_id,
-            text="Não devo explicações a ninguém."
-        )
-    else:
-        bot.sendMessage(chat_id=update.message.chat_id, text=tomiko.why)
-
-
-def mind(bot, update, args):
-    global tomiko
-    if random.random() < 0.1:
-        bot.sendMessage(
-            chat_id=update.message.chat_id,
-            text="Sai da minha cabeça."
-        )
-    else:
-        content = "Tomiko's mind:\n{}".format(tomiko.mind)
-        bot.sendMessage(chat_id=update.message.chat_id, text=content)
-
 logging.basicConfig(level=logging.INFO)
 
 token  = get_token()
 tomiko = Bot("Tomiko")
+cmds   = [] # Just to make sure the GC will not collect the commands.
 
 updater    = Updater(token=token)
 dispatcher = updater.dispatcher
 dispatcher.add_handler(MessageHandler(Filters.text, message))
-dispatcher.add_handler(CommandHandler('explain', explain, pass_args=True))
-dispatcher.add_handler(CommandHandler('mind', mind, pass_args=True))
+
+for command in commands.__all__:
+    cmd = getattr(commands, command).Command(dispatcher, tomiko)
+    cmds.append(cmd)
+    dispatcher.add_handler(CommandHandler(cmd.trigger, cmd.run, pass_args=True))
+
 updater.start_polling()
 
