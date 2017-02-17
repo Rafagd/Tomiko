@@ -10,7 +10,7 @@ class Command:
         if random.random() < 0.1:
             return "Sai da minha cabeça!"
         else:
-            return "Tomiko's mind:\n{}".format(self.bot.mind)
+            return "{}'s mind:\n{}".format(self.bot.name, self.bot.mind)
 
 
     def run(self, api, update, args):

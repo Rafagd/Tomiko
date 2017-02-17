@@ -25,7 +25,7 @@ class Command:
 
                 fl.seek(position)
 
-            return "{name} " + "slaps {target} around a bit with {thing}".format(
+            return "* {name} " + "slaps {target} around a bit with {thing}".format(
                 target=args[0],
                 thing=fl.readline().decode('utf-8')
             )
