@@ -22,7 +22,7 @@ class MessageReply:
     def send(self, api, chat):
         api.send_message(
             chat_id = chat,
-            text    = self.message.format(nome=self.target)
+            text    = self.message.text.format(nome=self.target)
         )
 
 
