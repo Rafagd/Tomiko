@@ -11,7 +11,8 @@ class Bot:
     def __init__(self, name):
         self.name   = name
         self.regexp = re.compile("(?is)" + name)
-        self.log    = log.Log("phrases.log")
+        self.log    = log.Log("data/text.log")
+        self.giflog = log.Log("data/gif.log")
         self.index  = log.Index(self.log)
         self.mind   = mind.Mind()
         self.why    = ""

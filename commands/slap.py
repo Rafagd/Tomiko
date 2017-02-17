@@ -8,7 +8,7 @@ class Command:
 
 
     def impl(self, *args):
-        with open("slaps.txt", "ab+") as fl:
+        with open("data/slaps.txt", "ab+") as fl:
             fl.seek(0, os.SEEK_END)
             size = fl.tell()
 
@@ -36,7 +36,7 @@ class Command:
         if len(args) > 0:
             target = args[0]
 
-        api.sendMessage(
+        api.send_message(
             chat_id = update.message.chat_id,
             text    = self.impl(target).format(
                 name = update.message.from_user.first_name

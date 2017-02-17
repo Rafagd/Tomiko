@@ -1,7 +1,7 @@
 import os
 import re
 
-SEPARATORS = re.compile('[ ,.!?\"\':\\[\\]\n\r\t]+')
+SEPARATORS = re.compile('[ ,.!?\"\':/&=\\[\\]\\(\\)\\{\\}\n\r\t]+')
 
 class Message:
     def __init__(self, text, offset):

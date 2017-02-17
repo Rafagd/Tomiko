@@ -14,7 +14,7 @@ class Command:
 
 
     def run(self, api, update, args):
-        api.sendMessage(
+        api.send_message(
             chat_id=update.message.chat_id,
             text=self.impl()
         )
