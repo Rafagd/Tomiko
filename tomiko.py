@@ -4,11 +4,11 @@ import commands
 import logging
 
 from bot import Bot
+from ext import GifHandler
 from telegram.ext import Filters
-from telegram.ext import MessageHandler
 from telegram.ext import CommandHandler
+from telegram.ext import MessageHandler
 from telegram.ext import Updater
-
 
 class Program:
     def __init__(self):
@@ -19,6 +19,8 @@ class Program:
 
         self.updater = Updater(token=token)
         self.updater.dispatcher.add_handler(MessageHandler(Filters.text, self.message))
+        self.updater.dispatcher.add_handler(GifHandler(Filters.text, self.gif))
+        self.updater.dispatcher.add_error_handler(self.error)
 
         self.bot      = Bot(self.updater.bot.get_me().first_name)
         self.chats    = {}
@@ -32,18 +34,42 @@ class Program:
             )
 
 
-    def message(self, api, update):
-        reply = self.bot.listen(update.message.from_user.first_name, update.message.text)
-        if reply != "":
-            update.message.reply_text(reply)
-
-        chat_id = update.message.chat.id
-        from_id = update.message.from_user.id
+    def check_groups(self, message):
+        chat_id = message.chat.id
+        from_id = message.from_user.id
         if chat_id != from_id:
             try:
                 _ = self.chats[chat_id]
             except:
                 self.chats[chat_id] = chat_id
+
+
+    def message(self, api, update):
+        reply = self.bot.listen_message(
+            update.message.from_user.first_name,
+            update.message.text
+        )
+
+        reply.send(api, update.message.chat.id)
+        self.check_groups(update.message)
+
+
+
+    def gif(self, api, update):
+        reply = self.bot.listen_gif(
+            update.message.from_user.first_name,
+            update.message.document.file_id
+        )
+
+        reply.send(api, update.message.chat.id)
+        self.check_groups(update.message)
+
+
+    def error(self, bot, update, error):
+        logging.warning("=======================================")
+        logging.warning("ERR:"+str(error))
+        logging.warning("BOT:"+str(bot))
+        logging.warning("UPD:"+str(update))
 
 
     def main(self):
