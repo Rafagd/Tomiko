@@ -17,7 +17,7 @@ class Bot:
         self.message_log   = log.Log("data/message.log")
         self.message_index = log.Index(self.message_log)
 
-        self.gif_log   = log.Log("data/gif.log")
+        self.gif_log   = log.Log("data/gif.log", always_flush=True)
         self.gif_index = log.Index(self.gif_log)
 
         self.mind = mind.Mind()
@@ -35,10 +35,14 @@ class Bot:
         response = NoReply()
         if subs > 0 or random.random() < 0.01:
             response = self.reply(message)
-            response.set_target(person)
+            response.quote_msg = (subs == 0) # Only quote if bot is interrupting
 
         self.message_index.update(message)
-        self.mind.update(message)
+        
+        # How many words we're going to remember?
+        msg_count = int(5.0 * random.random() + 1.0)
+        msg_list  = self.scaled_list(self.message_index, [ message ], msg_count)
+        self.mind.update(msg_list)
         return response
 
 
@@ -48,13 +52,12 @@ class Bot:
             mind_message += message.text + " "
         mind_message = gif + "\t" + mind_message.rstrip()
         mind_message = log.Message(mind_message, self.gif_log.size + 1)
-        print(mind_message)
         self.gif_log.add(mind_message)
 
         response = NoReply()
         if random.random() < 0.01:
             response = self.reply(mind_message)
-            response.set_target(person)
+            response.target = person
 
         self.gif_index.update(mind_message)
         return response
@@ -69,41 +72,85 @@ class Bot:
             reply_type *= 0.6
 
         # 10% chance of random message.
-        if reply_type < 0.10:
+        if reply_type < 1:
+            str_msg  = " ".join([ message.text for message in self.mind.messages() ]).capitalize() + "."
+            response = MessageReply(log.Message(str_msg, 0))
+            self.why = "Buguei."
+
+        elif reply_type < 0.10:
             response = MessageReply(self.read_random(self.message_log))
             self.why = "Sei lá, respondi aquilo só pelo caos."
 
         # 20% chance of replying with gif
-        if reply_type < 0.3:
-            response = self.reply_gif()
+        elif reply_type < 0.3:
+            response = self.reply_gif(message)
             # self.why is filled inside the function.
 
         # 50% of direct reply
         elif reply_type < 0.70:
-            response = MessageReply(
-                self.read_message(self.message_log, self.message_index, message)
-            )
-            self.why = "Estava respondendo esta mensagem: \"" + message.text + "\"."
+            response = MessageReply(self.read_messages(self.message_log, self.message_index, [ message ]))
+            self.why = 'Estava respondendo esta mensagem: "{}".'.format(message.text)
 
         # 40% chance of mindset reply
         else:
-            response = MessageReply(
-                self.read_mind(self.message_log, self.message_index)
-            )
+            response = MessageReply(self.read_messages(self.message_log, self.message_index, self.mind.messages()))
             # self.why is filled inside the function.
 
-        self.mind.update(response.message)
+        self.mind.update([ response.message ])
         return response
 
 
-    def reply_gif(self):
-        if random.random() < 0.20:
+    def reply_gif(self, message=""):
+        selected = random.random()
+
+        if selected < 0.20:
             message  = self.read_random(self.gif_log)
-            self.why = "Achei esse gif bonitinho."
+            self.why = 'Achei esse gif bonitinho.'
+
+        if selected < 0.60 and message != "":
+            message = self.read_messages(self.gif_log, self.gif_index, [ message ])
+            self.why = 'Usei o gif para responder à esta frase: "{}".'.format(message.text)
+
         else:
-            message = self.read_mind(self.gif_log, self.gif_index)
+            message = self.read_messages(self.gif_log, self.gif_index, self.mind.messages())
             # self.why is set inside the function
         return GifReply(message)
+
+
+    def scaled_list(self, index, messages, count):
+        word_stack = []
+        scale_sum  = 0
+
+        for message in messages:
+            for word in message.components:
+                scale = index.scale(word)
+                if scale > 0:
+                    scale      = 1.0 / scale
+                    scale_sum += scale
+                    word_stack.append((Message(word, message.offset), scale))
+
+        result   = []
+        visited  = []
+        found    = 0
+        expected = min(count, len(word_stack))
+        selected = random.random() * scale_sum
+
+        while found < expected:
+            word = word_stack.pop()
+            visited.append(word)
+            scale_sum -= word[1]
+
+            if selected > scale_sum:
+                result.append(visited.pop()[0])
+
+                while visited:
+                    word       = visited.pop()
+                    scale_sum += word[1]
+                    word_stack.append(word)
+                selected = random.random() * scale_sum
+                found += 1
+
+        return result
 
 
     def read_random(self, log):
@@ -116,37 +163,11 @@ class Bot:
         return log.read_message(offsets[int(random.random() * len(offsets))])
 
 
-    def read_message(self, log, index, message):
-        scale_sum = 0
-        for word in message.components:
-            scale = index.scale(word)
-            if scale > 0:
-                scale_sum += 1.0 / scale
-            
-        selected = random.random() * scale_sum
-        for word in message.components:
-            scale = index.scale(word)
-            if scale > 0:
-                scale_sum -= 1.0 / scale
-            if selected > scale_sum:
-                return self.read_word(log, index, word)
-        
-        # Unreachable?
-        return self.read_random(log)
-    
-
-    def read_mind(self, log, index):
-        mindset = self.mind.messages()
-        
-        if len(mindset) > 0:
-            selected = int(len(mindset) * random.random())
-            self.why = "Pensei que tinha relação com \"" + mindset[selected].text + "\"."
-            message  = self.read_message(log, index, mindset[selected])
-        else:
-            self.why = "Minha cabeça estava vazia."
-            message  = self.read_random(log)
-
-        # Only a problem on startup
-        return message
-        
+    def read_messages(self, log, index, messages):
+        scaled = self.scaled_list(index, messages, 1)
+        size   = len(scaled)
+        if size == 0:
+            return self.read_random(log)
+        selected = int(size * random.random())
+        return self.read_word(log, index, scaled[selected].text)
 

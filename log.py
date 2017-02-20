@@ -20,7 +20,9 @@ class Message:
 
 
 class Log:
-    def __init__(self, file_path):
+    def __init__(self, file_path, always_flush=False):
+        self.always_flush = always_flush
+
         self.file = open(file_path, 'ab+')
         self.file.seek(0, os.SEEK_END)
         self.size = self.file.tell()
@@ -30,6 +32,9 @@ class Log:
         self.file.seek(0, os.SEEK_END)
         self.file.write(str.encode(message.text) + b'\x0A')
         self.size = self.file.tell()
+
+        if self.always_flush:
+            self.file.flush()
 
 
     def iterator(self):

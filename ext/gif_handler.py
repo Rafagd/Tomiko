@@ -25,6 +25,9 @@ class GifHandler(Handler):
 
             if mime_type == "video/mp4":
                 res = update
+            elif mime_type != "":
+                logging.warning("Unhandled document type: {}".format(mime_type))
+
         return res
 
 

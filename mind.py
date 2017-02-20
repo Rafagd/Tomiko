@@ -6,15 +6,16 @@ class Mind:
         self._state = dict()
 
 
-    def update(self, message):
+    def update(self, messages):
         for word in self._state:
             self._state[word]["ttl"] -= 1
 
-        for word in message.components:
-            self._state[word] = {
-                "message": log.Message(word, message.offset),
-                "ttl":     10,
-            }
+        for message in messages:
+            for word in message.components:
+                self._state[word] = {
+                    "message": log.Message(word, message.offset),
+                    "ttl":     10,
+                }
 
         new_state = dict()
         for word in self._state:

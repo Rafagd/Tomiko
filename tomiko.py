@@ -50,7 +50,7 @@ class Program:
             update.message.text
         )
 
-        reply.send(api, update.message.chat.id)
+        reply.send(update)
         self.check_groups(update.message)
 
 
@@ -61,11 +61,12 @@ class Program:
             update.message.document.file_id
         )
 
-        reply.send(api, update.message.chat.id)
+        reply.send(update)
         self.check_groups(update.message)
 
 
     def error(self, bot, update, error):
+        return # Comment for debugging
         logging.warning("=======================================")
         logging.warning("ERR:"+str(error))
         logging.warning("BOT:"+str(bot))
