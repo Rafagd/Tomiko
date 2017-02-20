@@ -72,7 +72,7 @@ class Bot:
             reply_type *= 0.6
 
         # 10% chance of random message.
-        if reply_type < 1:
+        if reply_type < 0.001:
             str_msg  = " ".join([ message.text for message in self.mind.messages() ]).capitalize() + "."
             response = MessageReply(log.Message(str_msg, 0))
             self.why = "Buguei."
