@@ -1,6 +1,7 @@
 from telegram.ext import Handler
 from telegram     import Update
 from telegram.ext import Handler
+import logging
 
 class GifHandler(Handler):
     def __init__(self, command, callback,
