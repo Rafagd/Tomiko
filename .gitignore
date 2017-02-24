@@ -1,6 +1,7 @@
 *.swp
 *.swo
-*.log
-*.tok
 *.pyo
 *.pyc
+
+data/*
+!data/empty
