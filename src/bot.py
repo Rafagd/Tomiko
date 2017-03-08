@@ -40,7 +40,7 @@ class Bot:
         self.message_index.update(message)
         
         # How many words we're going to remember?
-        msg_count = int(5.0 * random.random() + 1.0)
+        msg_count = int(len(message.components) * random.random()) + 1
         msg_list  = self.scaled_list(self.message_index, [ message ], msg_count)
         self.mind.update(msg_list)
         return response
