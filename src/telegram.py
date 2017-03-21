@@ -1,8 +1,11 @@
 import os
 import signal
 
+from telegram       import Update
 from telegram.error import NetworkError
 from telegram.ext   import Handler
+
+from .database import Message, Author
 
 class UpdateHandler(Handler):
     def __init__(self, metadata, callback,
@@ -38,7 +41,50 @@ class UpdateHandler(Handler):
 
 
     def handle_update(self, update, dispatcher):
-        print(update)
         optional_args = {}
         return self.callback(dispatcher.bot, update, **optional_args)
 
+
+def read_author(update):
+    if not isinstance(update, Update):
+        raise TypeError('Argument must be instance of telegram.Update')
+
+    return Author(
+        id         = update.message.from_user.id,
+        first_name = update.message.from_user.first_name,
+        last_name  = update.message.from_user.last_name,
+        user_name  = update.message.from_user.username,
+    )
+
+
+def read_message(update):
+    if not isinstance(update, Update):
+        raise TypeError('Argument must be instance of telegram.Update')
+
+    message = Message()
+
+    try:
+        message.type    = Message.TYPE_DOCUMENT
+        message.content = update.message.document.file_id
+
+    except:
+        message.content = update.message.text
+
+        if message.content[0] == '/':
+            message.type = Message.TYPE_COMMAND
+        else:
+            message.type = Message.TYPE_TEXT
+
+    return message
+
+
+def send(update, response, with_quote=False):
+    if response.type == Message.TYPE_TEXT:
+        update.message.reply_text(response.content, quote=with_quote)
+
+    elif response.type == Message.TYPE_DOCUMENT:
+        update.message.reply_document(response.content, quote=with_quote)
+
+    else:
+        update.message.reply_text('Tipo desconhecido: {}'.format(response))
+    

@@ -1,5 +1,5 @@
+import logging
 import os.path
-import sqlite3
 import yaml
 
 try:
@@ -9,11 +9,11 @@ except ImportError:
     from yaml import Loader as yaml_loader
     from yaml import Dumper as yaml_dumper
 
-from src.database import *
-
+from sqlalchemy     import create_engine
+from sqlalchemy.orm import sessionmaker
+from src.database   import *
 
 current_version = 1
-
 
 class Config:
     def __init__(self, data):
@@ -48,7 +48,8 @@ class Config:
 
 
     def load(path):
-        with open(path, "r+") as stream:
+        with open(path, "a+") as stream:
+            stream.seek(0)
             return Config(yaml.load(stream, Loader=yaml_loader))
 
 
@@ -62,33 +63,34 @@ class Config:
 
 
 def migrate_0_1(config):
-    database = sqlite3.connect(os.path.join('data', 'database.db'))
-    authors  = AuthorTable(database)
-    messages = MessageTable(database)
-    slaps    = SlapTable(database)
+    engine = create_engine('sqlite:///data/database.sqlite')
+    create_all(engine)
 
-    authors.create()
-    messages.create()
-    slaps.create()
+    with scoped_session(sessionmaker(bind=engine)) as session:
+        with open(os.path.join('data', 'token.tok'), 'r') as stream:
+            config.token = stream.readline().rstrip()
 
-    with open(os.path.join('data', 'token.tok'), 'r') as stream:
-        config.token = stream.readline().rstrip()
+        with open(os.path.join('data', 'message.log'), 'r') as stream:
+            for line in stream:
+                line = line.rstrip().format(nome='Tomiko')
+                session.add(Message(
+                    type    = Message.TYPE_TEXT,
+                    content = line,
+                    mind    = line
+                ))
 
-    with open(os.path.join('data', 'message.log'), 'r') as stream:
-        for line in stream:
-            line = line.rstrip()
-            messages.insert(TextMessage(line, mind=line))
+        with open(os.path.join('data', 'gif.log'), 'r') as stream:
+            for line in stream:
+                fields = line.rstrip().format(nome='Tomiko').split('\t')
+                session.add(Message(
+                    type    = Message.TYPE_DOCUMENT,
+                    content = fields[0],
+                    mind    = '\t'.join(fields[1:])
+                ))
 
-    with open(os.path.join('data', 'gif.log'), 'r') as stream:
-        for line in stream:
-            data = line.rstrip().split('\t')
-            doc  = data[0]
-            mind = '\t'.join(data[1:])
-            messages.insert(DocumentMessage(doc, mind=mind))
+        with open(os.path.join('data', 'slaps.txt')) as stream:
+            for line in stream:
+                line = line.rstrip()
+                session.add(Slap(object=line))
 
-    with open(os.path.join('data', 'slaps.txt')) as stream:
-        for line in stream:
-            slaps.insert(TextSlap(line))
-
-    database.close()
     config.version = 1
