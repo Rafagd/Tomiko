@@ -4,7 +4,6 @@ import logging
 
 from src.config   import Config
 from src.main     import Main
-from src.message  import Message
 
 logging.basicConfig(level=logging.INFO)
 

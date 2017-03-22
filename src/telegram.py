@@ -30,14 +30,8 @@ class UpdateHandler(Handler):
 
 
     def error_handler(self, api, update, error):
-        try:
-            raise error
-        except NetworkError as e:
-            if '(409)' in e.message:
-                os.kill(os.getpid(), signal.SIGINT)
-                return
-        # Printing unknown errors.
-        print("ERROR:", api, update, error)
+        optional_args = { 'error': error }
+        return self.callback(dispatcher.bot, update, **optional_args)
 
 
     def handle_update(self, update, dispatcher):
@@ -64,17 +58,32 @@ def read_message(update):
     message = Message()
 
     try:
-        message.type    = Message.TYPE_DOCUMENT
         message.content = update.message.document.file_id
-
+        message.type    = Message.TYPE_DOCUMENT
+        return message
     except:
-        message.content = update.message.text
+        pass
 
-        if message.content[0] == '/':
-            message.type = Message.TYPE_COMMAND
-        else:
-            message.type = Message.TYPE_TEXT
+    try:
+        message.content = update.message.sticker.file_id
+        message.type    = Message.TYPE_STICKER
+        return message
+    except:
+        pass
 
+    if update.message.text[0] == '/':
+        message.type = Message.TYPE_COMMAND
+    else:
+        message.type = Message.TYPE_TEXT
+
+    message.content = update.message.text
+    return message
+
+
+def read_error(error):
+    message         = Message()
+    message.type    = Message.TYPE_ERROR
+    message.content = str(error)
     return message
 
 
@@ -84,6 +93,9 @@ def send(update, response, with_quote=False):
 
     elif response.type == Message.TYPE_DOCUMENT:
         update.message.reply_document(response.content, quote=with_quote)
+
+    elif response.type == Message.TYPE_STICKER:
+        update.message.reply_sticker(response.content, quote=with_quote)
 
     else:
         update.message.reply_text('Tipo desconhecido: {}'.format(response))
