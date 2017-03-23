@@ -21,9 +21,10 @@ class Author(Table):
 
     @staticmethod
     def fetch(session, author_id):
-        return session     \
-            .query(Author) \
-            .limit(1)      \
+        return session                      \
+            .query(Author)                  \
+            .filter(Author.id == author_id) \
+            .limit(1)                       \
             .one()
 
     def __repr__(self):

@@ -7,6 +7,8 @@ from telegram.ext   import Handler
 
 from .database import Message, Author
 
+
+
 class UpdateHandler(Handler):
     def __init__(self, metadata, callback,
                  pass_update_queue=False,
@@ -39,23 +41,37 @@ class UpdateHandler(Handler):
         return self.callback(dispatcher.bot, update, **optional_args)
 
 
-def read_author(update):
+
+def read_author(update, session):
     if not isinstance(update, Update):
         raise TypeError('Argument must be instance of telegram.Update')
 
-    return Author(
-        id         = update.message.from_user.id,
-        first_name = update.message.from_user.first_name,
-        last_name  = update.message.from_user.last_name,
-        user_name  = update.message.from_user.username,
-    )
+    try:
+        return Author.fetch(session, update.message.from_user.id)
+
+    except:
+        author = Author(
+            id         = update.message.from_user.id,
+            first_name = update.message.from_user.first_name,
+            last_name  = update.message.from_user.last_name,
+            user_name  = update.message.from_user.username,
+        )
+
+        session.add(author)
+        return author
 
 
-def read_message(update):
+def read_message(update, error = None):
     if not isinstance(update, Update):
         raise TypeError('Argument must be instance of telegram.Update')
 
-    message = Message()
+    message           = Message()
+    message.author_id = update.message.from_user.id
+
+    if error != None:
+        message.type    = Message.TYPE_ERROR
+        message.content = str(error)
+        return message
 
     try:
         message.content = update.message.document.file_id
@@ -80,12 +96,6 @@ def read_message(update):
     return message
 
 
-def read_error(error):
-    message         = Message()
-    message.type    = Message.TYPE_ERROR
-    message.content = str(error)
-    return message
-
 
 def send(update, response, with_quote=False):
     if response.type == Message.TYPE_TEXT:
@@ -99,4 +109,6 @@ def send(update, response, with_quote=False):
 
     else:
         update.message.reply_text('Tipo desconhecido: {}'.format(response))
-    
+
+
+

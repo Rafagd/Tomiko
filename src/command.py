@@ -2,8 +2,10 @@ from .database import *
 
 
 def command(session, author, message):
-    tokens = message.tokens()
-    if tokens[0] == '/slap':
+    tokens    = message.tokens()
+    command   = tokens[0].split('@')
+
+    if command[0] == '/slap':
         return slap(session, author, tokens)
     return None
 
