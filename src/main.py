@@ -101,10 +101,21 @@ class Main:
     def response(self, session, word):
         rand_value = random.random()
 
-        if rand_value < 0.001:
+        if rand_value < 1:
             response         = Message()
             response.type    = Message.TYPE_TEXT
-            response.content = str(self.mind)
+            response.content = str(self.mind).capitalize()
+            
+            rand_value = random.random()
+
+            if rand_value < (1.0 / 3.0):
+                response.content += '.'
+
+            elif rand_value < (2.0 / 3.0):
+                response.content += '!'
+
+            else:
+                response.content += '?'
 
         elif rand_value < 0.1:
             response = Message.fetch_random(session)
