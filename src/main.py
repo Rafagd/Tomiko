@@ -9,7 +9,7 @@ from telegram.ext   import Updater
 from .telegram import *
 from .database import *
 from .command  import command
-
+from .util     import ttl_set
 
 
 class Main:
@@ -19,7 +19,7 @@ class Main:
         self.updater  = Updater(token=config.token)
         self.metadata = self.updater.bot.get_me()
         self.handler  = UpdateHandler(self.metadata, self.message)
-        self.mind     = []
+        self.mind     = ttl_set()
 
         self.updater.dispatcher.add_handler(self.handler)
         self.updater.dispatcher.add_error_handler(self.handler.error_handler)
@@ -39,6 +39,23 @@ class Main:
                 response = self.message_command(session, author, message)
 
             else:
+                self.internalize(message)
+                message.mind = str(self.mind).strip()
+                session.add(message)
+
+                self.mind.tick()
+
+                mentions_me = re.search(
+                    self.metadata.first_name,
+                    message.content,
+                    re.IGNORECASE
+                )
+
+                if mentions_me == None:
+                    with_quote = True
+                    if random.random() > 0.01:
+                        return
+
                 response = self.message_chat(session, author, message)
 
             if response != None:
@@ -61,36 +78,56 @@ class Main:
 
 
     def message_chat(self, session, author, message):
-        message.mind = ' '.join(self.mind)
-        session.add(message)
+        word     = self.reasoning(message)
+        response = self.response(session, word)
+        self.internalize(response)
+        response.mind = str(self.mind).strip()
+        return response
 
-        if re.search(self.metadata.first_name, message.content, re.IGNORECASE) == None:
-            with_quote = True
-            # 10% chance of answering random messages on the channel
-            if random.random() > 0.01:
-                return
 
+    def reasoning(self, message):
+        if random.random() < 0.5:
+            reasoning = str(self.mind)
+        else:
+            reasoning = message.content
+
+        words = re.split('\s+', reasoning)
+        if len(words) > 0:
+            word = words[int(random.random() * len(words))]
+        else:
+            word = ''
+
+        return word
+
+
+    def response(self, session, word):
         rand_value = random.random()
 
         if rand_value < 0.1:
             response = Message.fetch_random(session)
 
         elif rand_value < 0.3:
-            words    = re.split('\s+', message.content)
-            selected = words[int(random.random() * len(words))]
-            response = Message.fetch_document(session, selected)
+            response = Message.fetch_document(session, word)
 
         elif rand_value < 0.5:
-            words    = re.split('\s+', message.content)
-            selected = words[int(random.random() * len(words))]
-            response = Message.fetch_sticker(session, selected)
+            response = Message.fetch_sticker(session, word)
 
         else:
-            words    = re.split('\s+', message.content)
-            selected = words[int(random.random() * len(words))]
-            response = Message.fetch_word(session, selected)
+            response = Message.fetch_word(session, word)
 
         return response
+
+
+    def internalize(self, message):
+        try:
+            for word in re.split('\W+', message.mind):
+                self.mind.add(word)
+        except:
+            pass
+
+        if message.type == Message.TYPE_TEXT:
+            for word in re.split('\W+', message.content):
+                self.mind.add(word)
 
 
     def run(self):
