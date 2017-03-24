@@ -43,7 +43,7 @@ class ttl_set(MutableSet):
 
 
     def __str__(self):
-        return ' '.join(self.data)
+        return ' '.join(self.data).strip()
 
 
     def add(self, item):

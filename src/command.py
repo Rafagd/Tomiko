@@ -1,12 +1,22 @@
 from .database import *
 
 
-def command(session, author, message):
-    tokens    = message.tokens()
-    command   = tokens[0].split('@')
+def command(bot, session, author, message):
+    tokens  = message.tokens()
+    command = tokens[0].split('@')
+
+    try:
+        if command[1] != bot.metadata.username:
+            return None
+    except:
+        pass
 
     if command[0] == '/slap':
         return slap(session, author, tokens)
+
+    elif command[0] == '/mind':
+        return mind(bot)
+
     return None
 
 
@@ -35,6 +45,18 @@ def slap(session, author, tokens):
     message         = Message()
     message.type    = Message.TYPE_TEXT
     message.content = '*{} slaps {} around a bit with {}'.format(actor, target, obj)
+    return message
+
+
+def mind(bot):
+    content = str(bot.mind)
+    
+    if content == '':
+        content = 'Calma aí, acabei de acordar!'
+
+    message         = Message()
+    message.type    = Message.TYPE_TEXT
+    message.content = content
     return message
 
 

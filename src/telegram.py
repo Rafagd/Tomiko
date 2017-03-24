@@ -50,6 +50,9 @@ def read_author(update, session):
         return Author.fetch(session, update.message.from_user.id)
 
     except:
+        pass
+
+    try:
         author = Author(
             id         = update.message.from_user.id,
             first_name = update.message.from_user.first_name,
@@ -59,6 +62,10 @@ def read_author(update, session):
 
         session.add(author)
         return author
+
+    except:
+        print(update)
+        raise
 
 
 def read_message(update, error = None):

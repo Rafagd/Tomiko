@@ -36,12 +36,14 @@ class Main:
                 response = self.message_error(session, author, message)
 
             elif message.type == Message.TYPE_COMMAND:
-                response = self.message_command(session, author, message)
+                response = command(self, session, author, message)
 
             else:
                 self.internalize(message)
-                message.mind = str(self.mind).strip()
-                session.add(message)
+                message.mind = str(self.mind)
+
+                if self.memorizable(message):
+                    session.add(message)
 
                 self.mind.tick()
 
@@ -73,15 +75,11 @@ class Main:
         return None
 
 
-    def message_command(self, session, author, message):
-        return command(session, author, message)
-
-
     def message_chat(self, session, author, message):
         word     = self.reasoning(message)
         response = self.response(session, word)
         self.internalize(response)
-        response.mind = str(self.mind).strip()
+        response.mind = str(self.mind)
         return response
 
 
@@ -103,7 +101,10 @@ class Main:
     def response(self, session, word):
         rand_value = random.random()
 
-        if rand_value < 0.1:
+        if rand_value < 0.001:
+            response = str(self.mind)
+
+        elif rand_value < 0.1:
             response = Message.fetch_random(session)
 
         elif rand_value < 0.3:
@@ -116,6 +117,12 @@ class Main:
             response = Message.fetch_word(session, word)
 
         return response
+
+
+    def memorizable(self, message):
+        if '4chan.org' in message.content:
+            return False
+        return True
 
 
     def internalize(self, message):
