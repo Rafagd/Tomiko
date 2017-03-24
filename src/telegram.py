@@ -28,7 +28,8 @@ class UpdateHandler(Handler):
 
 
     def check_update(self, update):
-        return True
+        # I'm not dealing with edited messages. Just ignore all.
+        return update.edited_message == None
 
 
     def error_handler(self, api, update, error):

@@ -102,7 +102,9 @@ class Main:
         rand_value = random.random()
 
         if rand_value < 0.001:
-            response = str(self.mind)
+            response         = Message()
+            response.type    = Message.TYPE_TEXT
+            response.content = str(self.mind)
 
         elif rand_value < 0.1:
             response = Message.fetch_random(session)
@@ -121,6 +123,8 @@ class Main:
 
     def memorizable(self, message):
         if '4chan.org' in message.content:
+            return False
+        if '4cdn.org' in message.content:
             return False
         return True
 
