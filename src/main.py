@@ -76,32 +76,44 @@ class Main:
 
 
     def message_chat(self, session, author, message):
-        word     = self.reasoning(message)
+        word     = self.reasoning(session, message)
         response = self.response(session, word)
         self.internalize(response)
         response.mind = str(self.mind)
         return response
 
 
-    def reasoning(self, message):
+    def reasoning(self, session, message):
         if random.random() < 0.5:
             reasoning = str(self.mind)
         else:
             reasoning = message.content
 
-        words = re.split('\s+', reasoning)
-        if len(words) > 0:
-            word = words[int(random.random() * len(words))]
-        else:
-            word = ''
+        words = []
+        for word in re.split('\W+', reasoning):
+            if word != '':
+                words.append(word)
 
+        total   = 0
+        entries = Dictionary.fetch_scores(session, words)
+        for entry in entries:
+            total += entry.score
+
+        word       = ''
+        rand_value = random.random() * total
+        for entry in entries:
+            total -= entry.score
+            if total < rand_value:
+                word = entry.word
+                break
+        
         return word
 
 
     def response(self, session, word):
         rand_value = random.random()
 
-        if rand_value < 1:
+        if rand_value < 0.001:
             response         = Message()
             response.type    = Message.TYPE_TEXT
             response.content = str(self.mind).capitalize()

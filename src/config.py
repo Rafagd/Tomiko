@@ -13,7 +13,7 @@ from sqlalchemy     import create_engine
 from sqlalchemy.orm import sessionmaker
 from src.database   import *
 
-current_version = 1
+current_version = 2
 
 class Config:
     def __init__(self, data):
@@ -62,35 +62,11 @@ class Config:
         return str(self.__dict__)
 
 
-def migrate_0_1(config):
+def migrate_1_2(config):
     engine = create_engine('sqlite:///data/database.sqlite')
-    create_all(engine)
+    Dictionary.__table__.create(engine)
 
     with scoped_session(sessionmaker(bind=engine)) as session:
-        with open(os.path.join('data', 'token.tok'), 'r') as stream:
-            config.token = stream.readline().rstrip()
+        Dictionary.update(session)
 
-        with open(os.path.join('data', 'message.log'), 'r') as stream:
-            for line in stream:
-                line = line.rstrip().format(nome='Tomiko')
-                session.add(Message(
-                    type    = Message.TYPE_TEXT,
-                    content = line,
-                    mind    = line
-                ))
-
-        with open(os.path.join('data', 'gif.log'), 'r') as stream:
-            for line in stream:
-                fields = line.rstrip().format(nome='Tomiko').split('\t')
-                session.add(Message(
-                    type    = Message.TYPE_DOCUMENT,
-                    content = fields[0],
-                    mind    = '\t'.join(fields[1:])
-                ))
-
-        with open(os.path.join('data', 'slaps.txt')) as stream:
-            for line in stream:
-                line = line.rstrip()
-                session.add(Slap(object=line))
-
-    config.version = 1
+    config.version = 2
