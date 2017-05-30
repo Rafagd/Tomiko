@@ -1,3 +1,5 @@
+import re
+
 from sqlalchemy     import Column, ForeignKey, Integer, func
 from sqlalchemy.orm import relationship
 

@@ -1,4 +1,4 @@
-from sqlalchemy     import Column, ForeignKey, Integer
+from sqlalchemy     import Column, ForeignKey, Integer, func
 from sqlalchemy.orm import relationship
 
 from .       import Author
