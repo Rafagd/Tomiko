@@ -95,7 +95,7 @@ def read_message(update, error = None):
     except:
         pass
 
-    if update.message.text[0] == '/':
+    if len(update.message.text) > 0 and update.message.text[0] == '/':
         message.type = Message.TYPE_COMMAND
     else:
         message.type = Message.TYPE_TEXT
