@@ -24,9 +24,18 @@ class Main:
         self.updater.dispatcher.add_handler(self.handler)
         self.updater.dispatcher.add_error_handler(self.handler.error_handler)
 
+        self.update_tick = 0
+
 
     def message(self, api, update, error = None):
         with scoped_session(self.Session) as session:
+
+            if self.update_tick == 0:
+                Dictionary.update(session)
+                self.update_tick = 250
+
+            self.update_tick -= 1
+
             author     = read_author(update, session)
             message    = read_message(update, error)
             response   = None
@@ -145,10 +154,12 @@ class Main:
 
 
     def memorizable(self, message):
-        if '4chan.org' in message.content:
-            return False
-        if '4cdn.org' in message.content:
-            return False
+        banned = [ '4chan.org', '4cdn.org' ]
+
+        for word in banned:
+            if word in message.content:
+                return False
+
         return True
 
 
