@@ -48,7 +48,8 @@ class Main:
                 response = command(self, session, author, message)
 
             else:
-                self.internalize(message)
+                if message.type == Message.TYPE_TEXT:
+                    self.internalize(message.content)
                 message.mind = str(self.mind)
 
                 if self.memorizable(message):
@@ -163,15 +164,13 @@ class Main:
         return True
 
 
-    def internalize(self, message):
-        try:
-            for word in re.split('\W+', message.mind):
-                self.mind.add(word)
-        except:
-            pass
-
-        if message.type == Message.TYPE_TEXT:
-            for word in re.split('\W+', message.content):
+    def internalize(self, content):
+        words = re.split('\W+', content)
+        count = int(random.random() * len(words))
+        
+        for i in range(count):
+            word = words[int(random.random() * len(words))]
+            if words != '':
                 self.mind.add(word)
 
 
