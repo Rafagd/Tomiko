@@ -16,9 +16,9 @@ class Dictionary(DeclarativeBase):
 
     @staticmethod
     def fetch_scores(session, words):
-        return session.query(Dictionary)                                    \
-            .filter(Dictionary.word.iregexp('(' + ('|'.join(words)) + ')')) \
-            .order_by(Dictionary.score.desc())                              \
+        return session.query(Dictionary)                                          \
+            .filter(Dictionary.word.iregexp(r'\b(' + ('|'.join(words)) + r')\b')) \
+            .order_by(Dictionary.score.desc())                                    \
             .all()
 
 
@@ -51,5 +51,9 @@ class Dictionary(DeclarativeBase):
             instance.word  = word
             instance.score = 1 - (dictionary[word] / max_repeat)
             session.add(instance)
+
+
+    def __repr__(self):
+        return self.word + ':' + str(self.score)
 
 

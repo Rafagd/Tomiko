@@ -31,8 +31,10 @@ class Main:
         with scoped_session(self.Session) as session:
 
             if self.update_tick == 0:
+                print('Updating dictionary')
                 Dictionary.update(session)
                 self.update_tick = 250
+                print('Updated')
 
             self.update_tick -= 1
 
@@ -49,7 +51,7 @@ class Main:
 
             else:
                 if message.type == Message.TYPE_TEXT:
-                    self.internalize(message.content)
+                    self.internalize(session, message.content)
                 message.mind = str(self.mind)
 
                 if self.memorizable(message):
@@ -86,38 +88,65 @@ class Main:
 
 
     def message_chat(self, session, author, message):
-        word     = self.reasoning(session, message)
+        if random.random() < 0.5:
+            content = str(self.mind)
+        else:
+            content = message.content
+
+        try:
+            word = self.random_words_with_scale(session, self.split_words(content), quantity=1)[0]
+        except:
+            word = ''
+
         response = self.response(session, word)
-        self.internalize(response)
+        self.internalize(session, response.content)
         response.mind = str(self.mind)
         return response
 
 
-    def reasoning(self, session, message):
-        if random.random() < 0.5:
-            reasoning = str(self.mind)
-        else:
-            reasoning = message.content
-
+    def split_words(self, content):
         words = []
-        for word in re.split('\W+', reasoning):
-            if word != '':
-                words.append(word)
+        
+        try:
+            for word in re.split('\W+', content):
+                if word != '':
+                    words.append(word)
+        except:
+            pass
 
+        return words
+    
+
+    def random_words_with_scale(self, session, words, quantity):
         total   = 0
         entries = Dictionary.fetch_scores(session, words)
         for entry in entries:
             total += entry.score
 
-        word       = ''
-        rand_value = random.random() * total
-        for entry in entries:
-            total -= entry.score
-            if total < rand_value:
-                word = entry.word
-                break
-        
-        return word
+        words  = []
+        values = []
+
+        for i in range(quantity):
+            values.append(random.random() * total)
+
+        # Ascending order because we are popping values.
+        values.sort()
+
+        try:
+            value = values.pop()
+
+            # Just run until one of the pops raises a IndexError.
+            while True:
+                entry  = entries.pop()
+                total -= entry.score
+                if total < value:
+                    words.append(entry.word)
+                    value = values.pop()
+
+        except IndexError:
+            pass
+
+        return words
 
 
     def response(self, session, word):
@@ -164,14 +193,19 @@ class Main:
         return True
 
 
-    def internalize(self, content):
-        words = re.split('\W+', content)
-        count = int(random.random() * len(words))
+    def internalize(self, session, content):
+        words = self.split_words(content)
+        count = min(1, int(random.random() * len(words)))
+        words = self.random_words_with_scale(session, words, count)
         
-        for i in range(count):
-            word = words[int(random.random() * len(words))]
-            if words != '':
-                self.mind.add(word)
+        try:
+            for i in range(count):
+                word = words[int(random.random() * len(words))]
+                if words != '':
+                    self.mind.add(word)
+        except:
+            # May IndexError sometimes, just ignore it. It's ok.
+            pass
 
 
     def run(self):

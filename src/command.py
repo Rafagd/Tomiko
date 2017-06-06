@@ -49,10 +49,18 @@ def slap(session, author, tokens):
 
 
 def mind(bot):
-    content = str(bot.mind)
-    
-    if content == '':
+    mind = []
+    for word, ttl in bot.mind.data.items():
+        mind.append((ttl, word))
+    mind.sort(key=lambda item: item[0], reverse=True)
+
+    if len(mind) == 0:
         content = 'Calma aí, acabei de acordar!'
+
+    else:
+        content = 'TTL\tWORD\n'
+        for (ttl, word) in mind:
+            content += '{:02d}\t{}\n'.format(ttl, word)
 
     message         = Message()
     message.type    = Message.TYPE_TEXT
