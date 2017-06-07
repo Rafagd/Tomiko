@@ -46,11 +46,14 @@ class Dictionary(DeclarativeBase):
         
         session.query(Dictionary).delete()
 
+        words = []
         for word in dictionary:
             instance       = Dictionary()
             instance.word  = word
             instance.score = 1 - (dictionary[word] / max_repeat)
-            session.add(instance)
+            words.append(instance)
+
+        session.bulk_save_objects(words)
 
 
     def __repr__(self):

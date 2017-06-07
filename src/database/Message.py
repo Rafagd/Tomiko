@@ -45,68 +45,45 @@ class Message(DeclarativeBase):
 
     @staticmethod
     def fetch_random(session):
-        return session               \
-            .query(Message)          \
-            .order_by(func.random()) \
-            .limit(1)                \
-            .one()
+        msg     = query(session).one()
+        msg.why = [ 'fetch_random' ]
+        return msg
 
 
     @staticmethod
     def fetch_word(session, word=''):
-        query = session                                \
-            .query(Message)                            \
-            .filter(Message.type == Message.TYPE_TEXT) \
-            .order_by(func.random())                   \
-            .limit(1)
+        try:
+            msg     = query(session, Message.TYPE_TEXT, word).one()
+            msg.why = [ word, 'fetch_word' ]
+        except:
+            msg     = query(session, Message.TYPE_TEXT).one()
+            msg.why = [ 'random_word', word, 'fetch_word' ]
 
-        if word != '':
-            try:
-                return query.filter(
-                    Message.content.contains(word) | 
-                    Message.mind.contains(word)
-                ).one()
-            except:
-                pass
-
-        # If no word provided or nothing found, return random.
-        return query.one()
+        return msg
 
 
     @staticmethod
     def fetch_document(session, word):
-        query = session                                    \
-            .query(Message)                                \
-            .filter(Message.type == Message.TYPE_DOCUMENT) \
-            .order_by(func.random())                       \
-            .limit(1)
+        try:
+            msg     = query(session, Message.TYPE_DOCUMENT, word).one()
+            msg.why = [ word, 'fetch_document' ]
+        except:
+            msg      = query(session, Message.TYPE_DOCUMENT).one()
+            msg.why += [ 'random_document', word, 'fetch_document' ]
 
-        if word != '':
-            try:
-                return query.filter(Message.mind.contains(word)).one()
-            except:
-                pass
-
-        # If no word provided or nothing found, return random.
-        return query.one()
+        return msg
 
 
     @staticmethod
     def fetch_sticker(session, word):
-        query = session                                   \
-            .query(Message)                               \
-            .filter(Message.type == Message.TYPE_STICKER) \
-            .order_by(func.random())                      \
-            .limit(1)
+        try:
+            msg     = query(session, Message.TYPE_STICKER, word).one()
+            msg.why = [ word, 'fetch_sticker' ]
+        except:
+            msg      = query(session, Message.TYPE_STICKER).one()
+            msg.why += [ 'random_sticker', word, 'fetch_sticker' ]
 
-        if word != '':
-            try:
-                return query.filter(Message.mind.contains(word)).one()
-            except:
-                pass
-
-        # If no word provided or nothing found, return random.
-        return query.one()
+        return msg
 
 
     def tokens(self):
@@ -127,5 +104,23 @@ class Message(DeclarativeBase):
             str_type = 'STK'
 
         return '{}:"{}"'.format(str_type, self.content)
+
+
+
+def query(session, msg_type=None, word='', limit=1):
+    query = session.query(Message).order_by(func.random())
+
+    if msg_type != None:
+        query = query.filter(Message.type == msg_type)
+
+    if word != '':
+        query = query.filter(
+            Message.content.contains(word) | Message.mind.contains(word)
+        )
+
+    if isinstance(limit, int):
+        query = query.limit(limit)
+
+    return query
 
 
