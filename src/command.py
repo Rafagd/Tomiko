@@ -78,11 +78,11 @@ explain_kw = {
     'from_mind':     lambda stack: 'estava pensando em "{}"'.format(stack.pop()),
     'from_text':     lambda stack: 'falaram isso: "{}"'.format(stack.pop()),
 
-    'response_mind':     lambda stack: 'respondi o que estava pensando "{}"'.format(explain_kw[stack.pop()]),
-    'response_random':   lambda stack: 'nem li',
-    'response_document': lambda stack: 'quis enviar uma imagem',
-    'response_sticker':  lambda stack: 'achei que um sticker ia ser engraçado',
-    'response_text':     lambda stack: 'mandei um texto',
+    'response_mind':     lambda stack: 'pensava em "{}"'.format(explain_kw[stack.pop()]),
+    'response_random':   lambda stack: 'nem li nada',
+    'response_document': lambda stack: 'me lembrou uma imagem',
+    'response_sticker':  lambda stack: 'quis responder com um sticker',
+    'response_text':     lambda stack: 'quis enviar uma mensagem',
 
     'fetch_document': lambda stack: 'procurei por algo com "{}"'.format(stack.pop()),
     'fetch_sticker':  lambda stack: 'tentei achar um relacionado com "{}"'.format(stack.pop()),
