@@ -62,11 +62,38 @@ class Config:
         return str(self.__dict__)
 
 
+def migrate_0_1(config):
+    engine = create_engine('sqlite:///data/database.sqlite')
+
+    try:
+        Author.__table__.create(engine)
+    except:
+        pass
+
+    try:
+        Message.__table__.create(engine)
+    except:
+        pass
+
+    try:
+        Slap.__table__.create(engine)
+    except:
+        pass
+
+    config.version = 1
+
+
 def migrate_1_2(config):
     engine = create_engine('sqlite:///data/database.sqlite')
-    Dictionary.__table__.create(engine)
+
+    try:
+        Dictionary.__table__.create(engine)
+    except:
+        pass
 
     with scoped_session(sessionmaker(bind=engine)) as session:
         Dictionary.update(session)
 
     config.version = 2
+
+
