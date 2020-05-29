@@ -6,13 +6,11 @@ from .Message import Message
 from .common  import DeclarativeBase
 from .type    import String
 
-
 class Dictionary(DeclarativeBase):
     __tablename__ = 'dictionary'
     id    = Column(Integer, primary_key=True)
     word  = Column(String,  nullable=False)
     score = Column(Float,   nullable=False)
-
 
     @staticmethod
     def fetch_scores(session, words):
@@ -20,7 +18,6 @@ class Dictionary(DeclarativeBase):
             .filter(Dictionary.word.iregexp(r'\b(' + ('|'.join(words)) + r')\b')) \
             .order_by(Dictionary.score.desc())                                    \
             .all()
-
 
     @staticmethod
     def update(session):
@@ -55,8 +52,5 @@ class Dictionary(DeclarativeBase):
 
         session.bulk_save_objects(words)
 
-
     def __repr__(self):
         return self.word + ':' + str(self.score)
-
-
