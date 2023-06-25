@@ -1,0 +1,19 @@
+[package]
+name    = "tomiko"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "tomikod"
+path = "src/main.rs"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+reqwest = { version = "*", features = ["json"] }
+tokio   = { version = "*", features = ["full"] }
+toml    = "*"
+serde   = { version = "*", features = ["derive"] }
+serde_json = "*"
+chrono  = { version = "*", features = ["serde"] }

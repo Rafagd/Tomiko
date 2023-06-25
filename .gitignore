@@ -5,3 +5,8 @@
 
 data/*
 !data/empty
+
+
+# Added by cargo
+
+/target
