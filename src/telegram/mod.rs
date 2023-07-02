@@ -1,4 +1,5 @@
 use std::{error::Error, fmt::Debug};
+use macros::wait;
 
 pub mod request;
 pub mod response;
@@ -31,24 +32,40 @@ impl Telegram
         };
         let response = match response {
             Ok(r)  => r,
-            Err(e) => return Err(TelegramError::BoxedError(Box::new(e))),
+            Err(e) => {
+                println!("Request: {:#?}", request);
+                println!("Error: {:#?}", e);
+                panic!("Error sending request!");
+            },
         };
 
         let response = match wait!{ response.text() } {
             Ok(r)  => r,
-            Err(e) => return Err(TelegramError::BoxedError(Box::new(e))),
+            Err(e) => {
+                println!("Request: {:#?}", request);
+                println!("Error: {:#?}", e);
+                panic!("Error fetching response!");
+            },
         };
 
-        let response = serde_json::from_str::<serde_json::Value>(&response);
-        let response = match response {
+        let parsed_response = serde_json::from_str::<serde_json::Value>(&response);
+        let response = match parsed_response {
             Ok(r) => r,
-            Err(e) => return Err(TelegramError::BoxedError(Box::new(e))),
+            Err(e) => {
+                println!("Response: {:#?}", response);
+                println!("Error: {:#?}", e);
+                panic!("Error parsing response!");
+            },
         };
 
-        let response = response::Response::from_value(&request.action, &response);
-        let response = match response {
+        let converted_response = response::Response::from_value(&request.action, &response);
+        let response = match converted_response {
             Ok(r) => r,
-            Err(e) => return Err(TelegramError::BoxedError(Box::new(e))),
+            Err(e) => {
+                println!("Response: {:#?}", response);
+                println!("Error: {:#?}", e);
+                panic!("Error converting response!");
+            },
         };
 
         if !response.ok {

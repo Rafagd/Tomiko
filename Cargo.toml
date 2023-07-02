@@ -10,10 +10,18 @@ path = "src/main.rs"
 [lib]
 path = "src/lib.rs"
 
+[workspace]
+members = [ ".", "migration" ]
+
 [dependencies]
+rand    = "*"
+chrono  = { version = "*", features = ["serde"] }
 reqwest = { version = "*", features = ["json"] }
 tokio   = { version = "*", features = ["full"] }
-toml    = "*"
-serde   = { version = "*", features = ["derive"] }
+serde      = { version = "*", features = ["derive"] }
 serde_json = "*"
-chrono  = { version = "*", features = ["serde"] }
+toml       = "*"
+sea-orm = { version = "^0", features = [ "sqlx-postgres", "runtime-tokio-native-tls", "macros", "with-chrono" ], default-features = false }
+migration = { path="migration" }
+macros = { path="macros" }
+dotenvy = "*"

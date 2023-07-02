@@ -55,6 +55,7 @@ pub enum Result
     None,
     GetMe(Me),
     GetUpdates(Vec<Update>),
+    SendMessage(Message),
 }
 
 impl Result
@@ -67,6 +68,7 @@ impl Result
                 Some(array) => array.iter().map(|update| Update::from_value(update)).collect(),
                 None        => vec![],
             }),
+            "sendMessage" => Result::SendMessage(Message::from_value(value)),
             action => {
                 return Err(ResponseError::Unimplemented(String::from(action)));
             }
@@ -143,8 +145,8 @@ impl Me
 #[derive(Debug)]
 pub struct Update
 {
-    pub update_id: i64,
-    pub message:   Message,
+    pub id:      i64,
+    pub message: Message,
 }
 
 impl Update
@@ -161,7 +163,7 @@ impl Update
         let message = Message::from_value(&message);
 
         Self {
-            update_id: {
+            id: {
                 value.get("update_id")
                     .map(|v| v.as_i64().unwrap_or(0))
                     .unwrap_or(0)
@@ -177,7 +179,7 @@ impl Update
 #[derive(Debug, Default)]
 pub struct Message
 {
-    pub message_id: i64,
+    pub id:   i64,
     pub from: User,
     pub chat: Chat,
 
@@ -192,8 +194,8 @@ impl Message
     fn from_value(value: &Value) -> Self
     {
         Self {
-            message_id: {
-                value.get("update_id")
+            id: {
+                value.get("message_id")
                     .map(|v| v.as_i64().unwrap_or(0))
                     .unwrap_or(0)
             },
@@ -241,7 +243,8 @@ pub struct User
     pub id:     i64,
     pub is_bot: bool,
     pub first_name: String,
-    pub username:   String,
+    pub last_name:  String,
+    pub user_name:  String,
 }
 
 impl User
@@ -268,7 +271,14 @@ impl User
                     .to_string()
             },
 
-            username: {
+            last_name: {
+                value.get("last_name")
+                    .map(|v| v.as_str().unwrap_or(""))
+                    .unwrap_or("")
+                    .to_string()
+            },
+
+            user_name: {
                 value.get("username")
                     .map(|v| v.as_str().unwrap_or(""))
                     .unwrap_or("")

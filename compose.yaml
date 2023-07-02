@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+
+  bot:
+    build:
+      context: .
+      target: builder
+    environment:
+      - CONFIG_FILE=/code/data/config.toml
+    command: cargo run
+    depends_on:
+      - database
+    ports:
+      - "9003:9003"
+    networks:
+      - server-side
+
+  database:
+    image: postgres:9
+    restart: always
+    ports:
+      - "54320:5432"
+    environment:
+      - POSTGRES_DB=tomiko
+      - POSTGRES_USER=tomiko
+      - POSTGRES_PASSWORD=abc123
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    user: "1000:1000"
+    networks:
+      server-side:
+        aliases:
+          - database
+
+networks:
+  server-side:

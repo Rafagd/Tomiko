@@ -10,3 +10,5 @@ data/*
 # Added by cargo
 
 /target
+
+.env

@@ -9,3 +9,4 @@ pub struct Config {
 pub struct Telegram {
     pub api_token: String,
 }
+
